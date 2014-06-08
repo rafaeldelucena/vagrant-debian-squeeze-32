@@ -27,23 +27,32 @@ chmod -R u+w "${FOLDER_ISO_INITRD}"
 rm -rf "${FOLDER_ISO_INITRD}"
 mkdir -p "${FOLDER_ISO_INITRD}"
 
-ISO_URL="http://ftp.fi.debian.org/debian-cd/6.0.4/i386/iso-cd/debian-6.0.4-i386-netinst.iso"
+DEBIAN_VERSION="6.0.9"
+ISO_URL="http://cdimage.debian.org/mirror/cdimage/archive/${DEBIAN_VERSION}/i386/iso-cd/debian-${DEBIAN_VERSION}-i386-netinst.iso"
 ISO_FILENAME="${FOLDER_ISO}/`basename ${ISO_URL}`"
-ISO_MD5="38bf1278cc5c98c5fa09dd0973ebc9f5"
+ISO_MD5="6d727c067d45d232f231bd56b2667d0b"
 
-ISO_GUESTADDITIONS="/Applications/VirtualBox.app/Contents/MacOS/VBoxGuestAdditions.iso"
+ISO_GUESTADDITIONS="/usr/share/virtualbox/VBoxGuestAdditions.iso"
 
 # download the installation disk if you haven't already or it is corrupted somehow
-echo "Downloading debian-6.0.4-i386-netinst.iso ..."
+echo "Downloading debian-${DEBIAN_VERSION}-i386-netinst.iso ..."
 if [ ! -e "${ISO_FILENAME}" ] 
 then
    curl --output "${ISO_FILENAME}" -L "${ISO_URL}"
 else
   # make sure download is right...
-  ISO_HASH=`md5 -q "${ISO_FILENAME}"`
-  if [ "${ISO_MD5}" != "${ISO_HASH}" ]; then
-    echo "ERROR: MD5 does not match. Got ${ISO_HASH} instead of ${ISO_MD5}. Aborting."
-    exit 1
+  if which md5 >/dev/null; then
+    ISO_HASH=$(md5 -q "${ISO_FILENAME}")
+    if [ "${ISO_MD5}" != "${ISO_HASH}" ]; then
+      echo "ERROR: MD5 does not match. Got ${ISO_HASH} instead of ${ISO_MD5}. Aborting."
+      exit 1
+    fi
+  else
+    ISO_HASH=$(md5sum "${ISO_FILENAME}" | cut -f 1 -d " ")
+    if [ "${ISO_MD5}" != "${ISO_HASH}" ]; then
+      echo "ERROR: MD5 does not match. Got ${ISO_HASH} instead of ${ISO_MD5}. Aborting."
+      exit 1
+    fi
   fi
 fi
 
